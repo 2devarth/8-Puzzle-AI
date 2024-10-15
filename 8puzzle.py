@@ -17,9 +17,13 @@ class Node:
     # move the blank space in the direction tasked
     def shuffle(self, puzzle, x1, y1, x2, y2): 
         # check if position is in bounds
-        if (len(self.data) >= x2 >= 0) and (len(self.data) > y2 >= 0) :
+        if 0 <= x2 < len(self.data) and 0 <= y2 < len(self.data[0]):
+            temp_puzzle = []
             temp_puzzle = self.copy(puzzle) # create copy
-            temp_puzzle[x2][y2] = temp_puzzle[x1][y1] = temp_puzzle[x1][y1], temp_puzzle[x2][y2]
+            temp = temp_puzzle[x2][y2]
+            temp_puzzle[x2][y2]= temp_puzzle[x1][y1]
+            temp_puzzle[x1][y1] = temp
+            # temp_puzzle[x2][y2], temp_puzzle[x1][y1] = temp_puzzle[x1][y1], temp_puzzle[x2][y2]
 
             return temp_puzzle
         # if the position value is out of limits return none
@@ -31,7 +35,7 @@ class Node:
         # four directions
         x, y = self.locate(self.data, '_')
         # positions contains moving direction position values for blank space
-        positions = [[x, y-1],[x,y+1],[x+1,y]]
+        positions = [[x, y-1],[x,y+1], [x+1,y] ]
         # generate subnodes by shuffling puzzle
         subnodes = []
         for i in positions:
@@ -59,13 +63,66 @@ class Puzzle:
         self.open = [] 
         self.closed = []
 
-    def task(self):
+    def action(self):
         # input the first and last matrix
-        print("Enter the initial state matrix\n\nExample:\n1 2 3\n8 _ 4\n7 6 5")
-        initial = self.accept()
-        print("Enter the goal state matrix \n")
-        goal = self.accept()
+        print("Enter the initial matrix (has one blank space as '_'):\n\nExample:\n1 2 3\n8 _ 4\n7 6 5\n")
+        start = self.obtain()
+        print("Enter the goal state matrix:\n\n")
+        goal = self.obtain()
+        start = Node(start, 0, 0)
+        start.fvalue = self.f(start, goal)
+        # put the initial matrix in the open list
+        self.open.append(start)
+        print("\n\n")
+        while True:
+            current = self.open[0] # Get current open list
+            print("Next Matrix\n\n")
+            # prints everything in current
+            for i in current.data:
+                for k in i:
+                    print(k, end=" ")
+                print("")
+            # If difference is not 0, we have not reached goal yet
+            for i in current.subnode():
+                i.fvalue = self.f(i, goal)
+                self.open.append(i)
+            self.closed.append(current)
+            del self.open[0]
+            # If difference = 0, we have reached goal matrix
+            if (self.h(current.data, goal) == 0):
+                break
+            # Sort list based on fvalue
+            self.open.sort(key=lambda x: x.fvalue, reverse=False)
+
+    # obtains the matrix inputed by user
+    def obtain(self):
+        puzzle = []
+        for i in range(0, self.n):
+            temp = input().split(" ")
+            puzzle.append(temp)
+        return puzzle
+    
+    # The Heuristic function which calculates the heuristic value
+    # f(x) = h(x) + g(x)
+    def f(self, start, goal):
+        return  self.h(start.data, goal) + start.level
+    
+    # Calculate difference between the 2 inputed matrixes
+    def h(self, start, goal):
+        temp = 0
+        for i in range(0, self.n):
+            for k in range(0, self.n):
+                # if the start matrix is not same as goal matrix then increase and return temp
+                if start[i][k] != goal[i][k] and start[i][k]!= "_":
+                    temp += 1
+        return temp
+
+        
+        
+
+
 
 # 3 x 3 matrix for 8 puzzle
+print("Welcome to the 8-Puzzle!\n\nAn initial matrix will be shuffled into the goal matrix.\n")
 puzzle = Puzzle(3)
-puzzle.process()
+puzzle.action()
