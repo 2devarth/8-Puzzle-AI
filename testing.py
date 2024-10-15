@@ -1,0 +1,1 @@
+print("Enter the initial state matrix\n\nExample:\n1 2 3\n8 _ 4\n7 6 5")
